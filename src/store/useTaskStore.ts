@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task, Reminder, DriverResponse, HandoverForm, HandoverSummary, GuideStep } from '@/types';
+import type { Task, Reminder, DriverResponse, HandoverForm, HandoverSummary, GuideStep, DriverResponseRecord } from '@/types';
 import { mockTasks } from '@/data/mockTasks';
 import { mockReminders } from '@/data/mockReminders';
 import { generateSummaryCode } from '@/utils/temperature';
@@ -7,6 +7,7 @@ import { generateSummaryCode } from '@/utils/temperature';
 interface TaskState {
   tasks: Task[];
   reminders: Reminder[];
+  driverResponseRecords: DriverResponseRecord[];
   selectedTaskId: string | null;
   activeReminderId: string | null;
   guideSteps: GuideStep[];
@@ -19,6 +20,7 @@ interface TaskState {
   completeCheckPoint: (taskId: string, checkPointId: string) => void;
   incrementDoorOpen: (taskId: string) => void;
   addPhoto: (taskId: string, photoUrl: string) => void;
+  completeTask: (taskId: string) => void;
 
   respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string) => void;
   setActiveReminder: (reminderId: string | null) => void;
@@ -34,12 +36,13 @@ interface TaskState {
 export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: mockTasks,
   reminders: mockReminders,
+  driverResponseRecords: [],
   selectedTaskId: mockTasks[0]?.id || null,
   activeReminderId: null,
   guideSteps: [
     { id: 1, title: '检查厢门是否关闭严密', description: '查看厢门密封条是否完好，确认锁扣已扣紧', completed: false },
     { id: 2, title: '检查制冷机运行状态', description: '观察制冷机显示屏，确认运行指示灯正常', completed: false },
-    { id: 3, title: '检查回风口是否畅通', description: '查看回风口有无货物遮挡，清理堆积物品', completed: false }
+    { id: 3, title: '检查回风口是否畅通', description: '检查回风口是否畅通', completed: false }
   ],
   handoverForm: {},
   handoverSummary: null,
@@ -103,8 +106,21 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }));
   },
 
+  completeTask: (taskId: string) => {
+    console.log('[TaskStore] completeTask:', taskId);
+    set(state => ({
+      tasks: state.tasks.map(task =>
+        task.id === taskId
+          ? { ...task, status: { ...task.status, status: 'completed' as const } }
+          : task
+      )
+    }));
+  },
+
   respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string) => {
     console.log('[TaskStore] respondToReminder:', reminderId, response);
+    const reminder = get().reminders.find(r => r.id === reminderId);
+    const now = new Date().toISOString();
     set(state => ({
       reminders: state.reminders.map(r =>
         r.id === reminderId
@@ -112,11 +128,22 @@ export const useTaskStore = create<TaskState>((set, get) => ({
               ...r,
               responded: true,
               response,
-              responseTime: new Date().toISOString(),
+              responseTime: now,
               photoUrl
             }
           : r
-      )
+      ),
+      driverResponseRecords: [
+        ...state.driverResponseRecords,
+        {
+          id: `DR${Date.now()}`,
+          taskId: reminder?.taskId || '',
+          reminderId,
+          response,
+          responseTime: now,
+          photoUrl
+        }
+      ]
     }));
   },
 
@@ -155,7 +182,12 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     const task = get().tasks.find(t => t.id === taskId);
     if (!task) throw new Error('Task not found');
 
+    const form = get().handoverForm;
     const completedCheckPoints = task.checkPoints.filter(cp => cp.completed).length;
+    const confirmedArrivalTemp = typeof form.currentTemp === 'number'
+      ? form.currentTemp
+      : task.status.currentTemp;
+
     const summary: HandoverSummary = {
       taskId: task.id,
       orderNo: task.orderNo,
@@ -163,16 +195,17 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       tempRecord: {
         loading: task.targetTemp.min + 1,
         average: task.status.currentTemp,
-        arrival: task.status.currentTemp,
+        arrival: confirmedArrivalTemp,
         range: task.targetTemp
       },
       doorOpenCount: task.status.doorOpenCount,
       checkPointCount: task.checkPoints.length,
       completedCheckPoints,
       arrivalTime: new Date().toISOString(),
-      unloadingStartTime: get().handoverForm.unloadingStartTime || new Date().toISOString(),
-      receiverName: get().handoverForm.receiverName || task.receiverName,
-      summaryCode: generateSummaryCode(taskId)
+      unloadingStartTime: form.unloadingStartTime || new Date().toISOString(),
+      receiverName: form.receiverName || task.receiverName,
+      summaryCode: generateSummaryCode(taskId),
+      photos: form.photos || []
     };
 
     console.log('[TaskStore] generateHandoverSummary:', summary);

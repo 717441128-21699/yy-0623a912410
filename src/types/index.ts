@@ -81,6 +81,16 @@ export interface HandoverForm {
   remarks?: string;
 }
 
+export interface DriverResponseRecord {
+  id: string;
+  taskId: string;
+  reminderId?: string;
+  response: DriverResponse;
+  responseTime: string;
+  photoUrl?: string;
+  note?: string;
+}
+
 export interface HandoverSummary {
   taskId: string;
   orderNo: string;
@@ -98,4 +108,5 @@ export interface HandoverSummary {
   unloadingStartTime: string;
   receiverName: string;
   summaryCode: string;
+  photos?: string[];
 }

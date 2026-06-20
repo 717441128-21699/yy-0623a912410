@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, Input, Image, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
@@ -9,11 +9,18 @@ import { formatTemp, formatTempRange } from '@/utils/temperature';
 import type { HandoverSummary } from '@/types';
 import styles from './index.module.scss';
 
-type StepType = 1 | 2 | 3;
+type StepType = 1 | 2 | 3 | 4;
 
 const HandoverPage: React.FC = () => {
   const {
-    tasks, selectedTaskId, setSelectedTask, updateHandoverForm, handoverForm, generateHandoverSummary, resetHandoverForm
+    tasks,
+    selectedTaskId,
+    setSelectedTask,
+    updateHandoverForm,
+    handoverForm,
+    generateHandoverSummary,
+    resetHandoverForm,
+    completeTask
   } = useTaskStore();
 
   const [currentStep, setCurrentStep] = useState<StepType>(1);
@@ -21,6 +28,8 @@ const HandoverPage: React.FC = () => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [summaryGenerated, setSummaryGenerated] = useState(false);
   const [summary, setSummary] = useState<HandoverSummary | null>(null);
+  const [tempInput, setTempInput] = useState<string>('');
+  const [tempConfirmed, setTempConfirmed] = useState(false);
 
   const inTransitTasks = useMemo(
     () => tasks.filter(t => t.status.status === 'in_transit'),
@@ -32,7 +41,11 @@ const HandoverPage: React.FC = () => {
     [tasks, selectedTaskId, inTransitTasks]
   );
 
-
+  useEffect(() => {
+    if (selectedTask && !tempInput) {
+      setTempInput(String(selectedTask.status.currentTemp));
+    }
+  }, [selectedTask]);
 
   const handleTaskSelect = (taskId: string) => {
     setSelectedTask(taskId);
@@ -42,6 +55,9 @@ const HandoverPage: React.FC = () => {
     setSummaryGenerated(false);
     setSummary(null);
     setCurrentStep(1);
+    setTempConfirmed(false);
+    const task = tasks.find(t => t.id === taskId);
+    setTempInput(task ? String(task.status.currentTemp) : '');
   };
 
   const handleTakePhoto = async () => {
@@ -69,6 +85,23 @@ const HandoverPage: React.FC = () => {
     setPhotos(newPhotos);
   };
 
+  const handleConfirmTemp = () => {
+    const temp = parseFloat(tempInput);
+    if (isNaN(temp)) {
+      Taro.showToast({
+        title: '请输入有效温度',
+        icon: 'none'
+      });
+      return;
+    }
+    updateHandoverForm({ currentTemp: temp, photos: [...photos] });
+    setTempConfirmed(true);
+    Taro.showToast({
+      title: '温度已确认',
+      icon: 'success'
+    });
+  };
+
   const handleRefreshTime = () => {
     const now = dayjs().format('YYYY-MM-DD HH:mm');
     updateHandoverForm({ unloadingStartTime: now });
@@ -79,49 +112,67 @@ const HandoverPage: React.FC = () => {
   };
 
   const handleNextStep = () => {
+    if (currentStep === 1 && !tempConfirmed) {
+      Taro.showToast({
+        title: '请先确认温度',
+        icon: 'none'
+      });
+      return;
+    }
     if (currentStep < 3) {
-      setCurrentStep((currentStep + 1) as StepType;
+      setCurrentStep((currentStep + 1) as StepType);
+    } else if (currentStep === 3) {
+      if (!handoverForm.receiverName) {
+        Taro.showToast({
+          title: '请填写收货人',
+          icon: 'none'
+        });
+        return;
+      }
+      if (!handoverForm.unloadingStartTime) {
+        Taro.showToast({
+          title: '请确认卸货时间',
+          icon: 'none'
+        });
+        return;
+      }
+      updateHandoverForm({ photos: [...photos] });
+      if (selectedTask) {
+        const result = generateHandoverSummary(selectedTask.id);
+        setSummary(result);
+        setSummaryGenerated(true);
+        setCurrentStep(4);
+      }
     }
   };
 
   const handlePrevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep((currentStep - 1) as StepType;
+    if (currentStep > 1 && currentStep <= 3) {
+      setCurrentStep((currentStep - 1) as StepType);
+    } else if (currentStep === 4) {
+      setCurrentStep(3);
     }
   };
 
-  const handleGenerateSummary = () => {
-    if (!selectedTask) {
-      Taro.showToast({
-        title: '请选择任务',
-        icon: 'none'
-      });
-      return;
-    }
+  const handleBackToEdit = () => {
+    setCurrentStep(1);
+    setSummaryGenerated(false);
+    setSummary(null);
+  };
 
-    if (!handoverForm.receiverName) {
-      Taro.showToast({
-        title: '请填写收货人',
-        icon: 'none'
-      });
-      return;
-    }
-
-    if (!handoverForm.unloadingStartTime) {
-      Taro.showToast({
-        title: '请确认卸货时间',
-        icon: 'none'
-      });
-      return;
-    }
-
-    const result = generateHandoverSummary(selectedTask.id);
-    setSummary(result);
-    setSummaryGenerated(true);
+  const handleCompleteHandover = () => {
+    if (!selectedTask) return;
+    completeTask(selectedTask.id);
     Taro.showToast({
-      title: '交接摘要已生成',
-      icon: 'success'
+      title: '交接已完成',
+      icon: 'success',
+      duration: 2000
     });
+    setTimeout(() => {
+      Taro.switchTab({
+        url: '/pages/tasks/index'
+      });
+    }, 1500);
   };
 
   const handleCopyCode = () => {
@@ -144,11 +195,17 @@ const HandoverPage: React.FC = () => {
     setSummaryGenerated(false);
     setSummary(null);
     setCurrentStep(1);
+    setTempConfirmed(false);
+    if (selectedTask) {
+      setTempInput(String(selectedTask.status.currentTemp));
+    }
   };
 
   const formatDateTime = (dateStr: string) => {
     return dayjs(dateStr).format('MM-DD HH:mm');
   };
+
+  const stepLabels = ['温度确认', '收货人', '卸货时间', '交接预览'];
 
   return (
     <>
@@ -169,12 +226,12 @@ const HandoverPage: React.FC = () => {
             <Text className={styles.emptyText}>暂无到达待交接任务</Text>
             <Text className={styles.emptySubtext}>请先完成运输途中的检查点</Text>
           </View>
-        ) : summaryGenerated && summary ? (
+        ) : summaryGenerated && summary && currentStep === 4 ? (
           <View className={styles.summaryCard}>
             <View className={styles.summaryHeader}>
-              <Text className={styles.summaryTitle}>📋 交接摘要</Text>
+              <Text className={styles.summaryTitle}>📋 交接摘要预览</Text>
               <Text className={styles.summarySubtitle}>
-                {dayjs().format('YYYY年MM月DD日 HH:mm')} 生成
+                请仔细核对以下信息，确认无误后完成交接
               </Text>
             </View>
 
@@ -198,8 +255,10 @@ const HandoverPage: React.FC = () => {
                   <Text className={styles.summaryTempValue}>{formatTemp(summary.tempRecord.average)}</Text>
                 </View>
                 <View className={styles.summaryTempItem}>
-                  <Text className={styles.summaryTempLabel}>到货温度</Text>
-                  <Text className={styles.summaryTempValue}>{formatTemp(summary.tempRecord.arrival)}</Text>
+                  <Text className={styles.summaryTempLabel}>确认到货温度</Text>
+                  <Text className={classnames(styles.summaryTempValue, styles.confirmed)}>
+                    {formatTemp(summary.tempRecord.arrival)}
+                  </Text>
                 </View>
               </View>
 
@@ -239,6 +298,22 @@ const HandoverPage: React.FC = () => {
                 <Text className={styles.summaryLabel}>收货人</Text>
                 <Text className={styles.summaryValue}>{summary.receiverName}</Text>
               </View>
+              {summary.photos && summary.photos.length > 0 && (
+                <View className={styles.summaryPhotoSection}>
+                  <Text className={styles.summaryLabel}>温度仪表照片</Text>
+                  <View className={styles.summaryPhotoGrid}>
+                    {summary.photos.map((photo, idx) => (
+                      <Image
+                        key={idx}
+                        src={photo}
+                        className={styles.summaryPhotoItem}
+                        mode="aspectFill"
+                        onClick={() => Taro.previewImage({ urls: summary.photos || [], current: photo })}
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
             </View>
 
             <View className={styles.summaryCodeSection} onClick={handleCopyCode}>
@@ -247,11 +322,11 @@ const HandoverPage: React.FC = () => {
             </View>
 
             <View className={styles.summaryActions}>
-              <View className={styles.btnSecondary} onClick={handleReset}>
-                <Text className={styles.btnSecondaryText}>重新生成</Text>
+              <View className={styles.btnSecondary} onClick={handleBackToEdit}>
+                <Text className={styles.btnSecondaryText}>返回修改</Text>
               </View>
-              <View className={styles.btnPrimary}>
-                <Text className={styles.btnPrimaryText}>完成交接</Text>
+              <View className={styles.btnPrimary} onClick={handleCompleteHandover}>
+                <Text className={styles.btnPrimaryText}>✓ 完成交接</Text>
               </View>
             </View>
           </View>
@@ -277,7 +352,7 @@ const HandoverPage: React.FC = () => {
 
             <View className={styles.stepsIndicator}>
               <View className={styles.stepsProgress}>
-                {[1, 2, 3].map(step => (
+                {[1, 2, 3, 4].map(step => (
                   <View
                     key={step}
                     className={classnames(
@@ -294,7 +369,7 @@ const HandoverPage: React.FC = () => {
                       )}
                     </View>
                     <Text className={styles.stepLabel}>
-                      {step === 1 ? '温度确认' : step === 2 ? '收货人' : '卸货时间'}
+                      {stepLabels[step - 1]}
                     </Text>
                   </View>
                 ))}
@@ -303,14 +378,31 @@ const HandoverPage: React.FC = () => {
               <View className={styles.stepContent}>
                 {currentStep === 1 && (
                   <View>
-                    <Text className={styles.formTitle}>确认当前温度</Text>
-                    <TemperatureGauge
-                      current={selectedTask.status.currentTemp}
-                      range={selectedTask.targetTemp}
-                      fluctuation={selectedTask.allowedFluctuation}
-                    />
+                    <Text className={styles.formTitle}>确认到货温度</Text>
+                    <View className={styles.tempDisplay}>
+                      <TemperatureGauge
+                        current={parseFloat(tempInput) || 0}
+                        range={selectedTask.targetTemp}
+                        fluctuation={selectedTask.allowedFluctuation}
+                      />
+                    </View>
 
-                    <Text className={styles.formTitle}>拍照留证（可选）</Text>
+                    <View className={styles.inputRow}>
+                      <Text className={styles.inputLabel}>当前温度（可手动调整）</Text>
+                      <View className={styles.tempInputWrapper}>
+                        <Input
+                          className={styles.tempInput}
+                          type="digit"
+                          placeholder="请输入温度"
+                          placeholder-class="input-placeholder"
+                          value={tempInput}
+                          onInput={(e) => setTempInput(e.detail.value)}
+                        />
+                        <Text className={styles.tempUnit}>{selectedTask.targetTemp.unit}</Text>
+                      </View>
+                    </View>
+
+                    <Text className={styles.formTitle}>拍照确认（建议拍仪表）</Text>
                     <View className={styles.photoGrid}>
                       {photos.map((photo, index) => (
                         <View key={index} className={styles.photoItem}>
@@ -330,6 +422,15 @@ const HandoverPage: React.FC = () => {
                         </View>
                       )}
                     </View>
+
+                    <View
+                      className={classnames(styles.confirmTempBtn, tempConfirmed && styles.confirmed)}
+                      onClick={handleConfirmTemp}
+                    >
+                      <Text className={styles.confirmTempBtnText}>
+                        {tempConfirmed ? '✓ 温度已确认' : '确认温度'}
+                      </Text>
+                    </View>
                   </View>
                 )}
 
@@ -337,7 +438,7 @@ const HandoverPage: React.FC = () => {
                   <View>
                     <Text className={styles.formTitle}>确认收货人信息</Text>
                     <View className={styles.inputRow}>
-                      <Text className={styles.inputLabel}>收货人姓名</Text>
+                      <Text className={styles.inputLabel}>收货人姓名 *</Text>
                       <Input
                         className={styles.inputField}
                         placeholder="请输入收货人姓名"
@@ -395,24 +496,19 @@ const HandoverPage: React.FC = () => {
                   <Text className={styles.btnSecondaryText}>上一步</Text>
                 </View>
               )}
-              {currentStep < 3 ? (
-                <View
-                  className={classnames(styles.btnPrimary, currentStep === 1 && !selectedTask && styles.disabled)}
-                  onClick={handleNextStep}
-                >
-                  <Text className={styles.btnPrimaryText}>下一步</Text>
-                </View>
-              ) : (
+              {currentStep < 4 ? (
                 <View
                   className={classnames(
                     styles.btnPrimary,
-                    (!handoverForm.receiverName || !handoverForm.unloadingStartTime) && styles.disabled
+                    currentStep === 1 && !tempConfirmed && styles.disabled
                   )}
-                  onClick={handleGenerateSummary}
+                  onClick={handleNextStep}
                 >
-                  <Text className={styles.btnPrimaryText}>生成交接摘要</Text>
+                  <Text className={styles.btnPrimaryText}>
+                    {currentStep === 3 ? '预览交接摘要' : '下一步'}
+                  </Text>
                 </View>
-              )}
+              ) : null}
             </View>
           </>
         ) : null}

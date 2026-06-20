@@ -7,9 +7,10 @@ import { useTaskStore } from '@/store/useTaskStore';
 import TaskCard from '@/components/TaskCard';
 import TemperatureGauge from '@/components/TemperatureGauge';
 import CheckPointItem from '@/components/CheckPointItem';
+import { formatTempRange, formatTemp } from '@/utils/temperature';
 import styles from './index.module.scss';
 
-type TabType = 'in_transit' | 'pending';
+type TabType = 'in_transit' | 'pending' | 'completed';
 
 const TasksPage: React.FC = () => {
   const { tasks, selectedTaskId, setSelectedTask, completeCheckPoint } = useTaskStore();
@@ -23,8 +24,20 @@ const TasksPage: React.FC = () => {
     () => tasks.filter(t => t.status.status === 'pending'),
     [tasks]
   );
+  const completedTasks = useMemo(
+    () => tasks.filter(t => t.status.status === 'completed'),
+    [tasks]
+  );
 
-  const displayTasks = activeTab === 'in_transit' ? inTransitTasks : pendingTasks;
+  const displayTasks = useMemo(() => {
+    switch (activeTab) {
+      case 'in_transit': return inTransitTasks;
+      case 'pending': return pendingTasks;
+      case 'completed': return completedTasks;
+      default: return inTransitTasks;
+    }
+  }, [activeTab, inTransitTasks, pendingTasks, completedTasks]);
+
   const selectedTask = useMemo(
     () => tasks.find(t => t.id === selectedTaskId) || displayTasks[0],
     [tasks, selectedTaskId, displayTasks]
@@ -83,6 +96,17 @@ const TasksPage: React.FC = () => {
             )}
           </Text>
         </View>
+        <View
+          className={classnames(styles.tabItem, activeTab === 'completed' && styles.active)}
+          onClick={() => setActiveTab('completed')}
+        >
+          <Text className={styles.tabText}>
+            已完成
+            {completedTasks.length > 0 && (
+              <Text className={styles.tabBadge}>{completedTasks.length}</Text>
+            )}
+          </Text>
+        </View>
       </View>
 
       {displayTasks.length > 0 ? (
@@ -98,7 +122,50 @@ const TasksPage: React.FC = () => {
             ))}
           </View>
 
-          {selectedTask && (
+          {selectedTask && activeTab === 'completed' ? (
+            <View className={styles.detailSection}>
+              <View className={styles.tempGaugeCard}>
+                <View className={styles.completedHeader}>
+                  <Text className={styles.completedTag}>✓ 已完成</Text>
+                  <Text className={styles.completedTime}>
+                    完成时间：{dayjs(selectedTask.status.lastCheckTime).format('MM-DD HH:mm')}
+                  </Text>
+                </View>
+                <View className={styles.completedInfo}>
+                  <View className={styles.completedInfoRow}>
+                    <Text className={styles.completedInfoLabel}>订单编号</Text>
+                    <Text className={styles.completedInfoValue}>{selectedTask.orderNo}</Text>
+                  </View>
+                  <View className={styles.completedInfoRow}>
+                    <Text className={styles.completedInfoLabel}>货物名称</Text>
+                    <Text className={styles.completedInfoValue}>{selectedTask.cargoName}</Text>
+                  </View>
+                  <View className={styles.completedInfoRow}>
+                    <Text className={styles.completedInfoLabel}>目标温区</Text>
+                    <Text className={styles.completedInfoValue}>{formatTempRange(selectedTask.targetTemp)}</Text>
+                  </View>
+                  <View className={styles.completedInfoRow}>
+                    <Text className={styles.completedInfoLabel}>最后记录温度</Text>
+                    <Text className={styles.completedInfoValue}>{formatTemp(selectedTask.status.currentTemp)}</Text>
+                  </View>
+                  <View className={styles.completedInfoRow}>
+                    <Text className={styles.completedInfoLabel}>检查点完成</Text>
+                    <Text className={styles.completedInfoValue}>
+                      {selectedTask.checkPoints.filter(cp => cp.completed).length}/{selectedTask.checkPoints.length}
+                    </Text>
+                  </View>
+                  <View className={styles.completedInfoRow}>
+                    <Text className={styles.completedInfoLabel}>开门次数</Text>
+                    <Text className={styles.completedInfoValue}>{selectedTask.status.doorOpenCount} 次</Text>
+                  </View>
+                  <View className={styles.completedInfoRow}>
+                    <Text className={styles.completedInfoLabel}>收货人</Text>
+                    <Text className={styles.completedInfoValue}>{selectedTask.receiverName}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          ) : selectedTask ? (
             <View className={styles.detailSection}>
               <View className={styles.tempGaugeCard} onClick={handleViewDetail}>
                 <Text className={styles.gaugeTitle}>温度监控</Text>
@@ -148,12 +215,14 @@ const TasksPage: React.FC = () => {
                 </View>
               </View>
             </View>
-          )}
+          ) : null}
         </>
       ) : (
         <View className={styles.emptyState}>
           <Text className={styles.emptyIcon}>📭</Text>
-          <Text className={styles.emptyText}>暂无{activeTab === 'in_transit' ? '运输中' : '待出发'}任务</Text>
+          <Text className={styles.emptyText}>
+            暂无{activeTab === 'in_transit' ? '运输中' : activeTab === 'pending' ? '待出发' : '已完成'}任务
+          </Text>
         </View>
       )}
     </ScrollView>

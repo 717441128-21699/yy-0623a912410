@@ -272,6 +272,61 @@
   }
 }
 
+.tempInputWrapper {
+  display: flex;
+  align-items: center;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  background: $color-bg-card;
+}
+
+.tempInput {
+  flex: 1;
+  height: 88rpx;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  background: transparent;
+}
+
+.tempUnit {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  margin-left: $spacing-xs;
+}
+
+.confirmTempBtn {
+  margin-top: $spacing-lg;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  border: 2rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+
+  &.confirmed {
+    background: $color-tag-green;
+    border-color: $color-success;
+  }
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.confirmTempBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+
+  .confirmed & {
+    color: $color-success;
+  }
+}
+
 .timeDisplay {
   display: flex;
   align-items: center;
@@ -532,6 +587,29 @@
   font-size: $font-size-lg;
   font-weight: $font-weight-bold;
   color: $color-primary;
+
+  &.confirmed {
+    color: $color-success;
+  }
+}
+
+.summaryPhotoSection {
+  padding: $spacing-md 0;
+  border-top: 1rpx solid $color-divider;
+  margin-top: $spacing-sm;
+}
+
+.summaryPhotoGrid {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.summaryPhotoItem {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-sm;
 }
 
 .summaryCodeSection {

@@ -206,3 +206,54 @@
   font-size: $font-size-sm;
   color: $color-text-tertiary;
 }
+
+.completedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.completedTag {
+  padding: $spacing-xs $spacing-md;
+  background: $color-tag-green;
+  color: $color-success;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.completedTime {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.completedInfo {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+}
+
+.completedInfoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm 0;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
+  }
+}
+
+.completedInfoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.completedInfoValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}

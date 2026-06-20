@@ -2,19 +2,28 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
+import dayjs from 'dayjs';
 import { useTaskStore } from '@/store/useTaskStore';
 import ReminderItem from '@/components/ReminderItem';
 import StatusButton from '@/components/StatusButton';
 import StepGuide from '@/components/StepGuide';
-import type { DriverResponse } from '@/types';
+import type { DriverResponse, DriverResponseRecord } from '@/types';
 import styles from './index.module.scss';
 
 type FilterType = 'all' | 'pending' | 'responded' | 'warning';
+
+const responseTextMap: Record<DriverResponse, { label: string; icon: string; color: string }> = {
+  temp_normal: { label: '温度正常', icon: '✓', color: '#00B42A' },
+  refuel_no_open: { label: '已加油未开厢', icon: '⛽', color: '#0E6FFF' },
+  fluctuation_found: { label: '发现波动', icon: '⚠', color: '#FF7D00' },
+  checked_ok: { label: '检查通过', icon: '✅', color: '#00B42A' }
+};
 
 const RemindersPage: React.FC = () => {
   const {
     reminders,
     tasks,
+    driverResponseRecords,
     selectedTaskId,
     setSelectedTask,
     activeReminderId,
@@ -77,6 +86,20 @@ const RemindersPage: React.FC = () => {
     () => filteredReminders.filter(r => !r.triggered),
     [filteredReminders]
   );
+
+  const taskResponseRecords = useMemo(() => {
+    let records = driverResponseRecords;
+    if (selectedTaskId) {
+      records = records.filter(r => r.taskId === selectedTaskId);
+    }
+    return [...records].sort(
+      (a, b) => new Date(b.responseTime).getTime() - new Date(a.responseTime).getTime()
+    );
+  }, [driverResponseRecords, selectedTaskId]);
+
+  const getTaskName = (taskId: string) => {
+    return tasks.find(t => t.id === taskId)?.cargoName || '未知任务';
+  };
 
   const handleRespond = (reminderId: string) => {
     const reminder = reminders.find(r => r.id === reminderId);
@@ -160,9 +183,16 @@ const RemindersPage: React.FC = () => {
     setSelectedTask(taskId || tasks[0]?.id);
   };
 
+  const formatResponseTime = (time: string) => {
+    return dayjs(time).format('MM-DD HH:mm:ss');
+  };
+
   return (
     <>
-      <View className={styles.mask} onClick={handleClosePanel} />
+      <View
+        className={classnames(styles.mask, showPanel && styles.visible)}
+        onClick={handleClosePanel}
+      />
 
       <ScrollView className={styles.pageContainer} scrollY>
         <View className={styles.pageHeader}>
@@ -176,7 +206,7 @@ const RemindersPage: React.FC = () => {
             <Text className={styles.statLabel}>待处理</Text>
           </View>
           <View className={styles.statItem}>
-            <Text className={classnames(styles.statValue, 'warning' && warningCount > 0)}>{warningCount}</Text>
+            <Text className={classnames(styles.statValue, warningCount > 0 && styles.danger)}>{warningCount}</Text>
             <Text className={styles.statLabel}>温度预警</Text>
           </View>
           <View className={styles.statItem}>
@@ -270,7 +300,53 @@ const RemindersPage: React.FC = () => {
             </>
           )}
 
-          {filteredReminders.length === 0 && (
+          {taskResponseRecords.length > 0 && (
+            <>
+              <View className={styles.sectionHeader}>
+                <Text className={styles.sectionTitle}>📝 响应记录时间线</Text>
+                <Text className={styles.sectionCount}>{taskResponseRecords.length}条</Text>
+              </View>
+              <View className={styles.timelineCard}>
+                {taskResponseRecords.map((record: DriverResponseRecord, index: number) => {
+                  const info = responseTextMap[record.response];
+                  return (
+                    <View key={record.id} className={styles.timelineItem}>
+                      <View className={styles.timelineDot}>
+                        <Text className={styles.timelineDotIcon}>{info.icon}</Text>
+                      </View>
+                      {index < taskResponseRecords.length - 1 && (
+                        <View className={styles.timelineLine} />
+                      )}
+                      <View className={styles.timelineContent}>
+                        <View className={styles.timelineHeader}>
+                          <Text
+                            className={styles.timelineStatus}
+                            style={{ color: info.color }}
+                          >
+                            {info.label}
+                          </Text>
+                          <Text className={styles.timelineTime}>
+                            {formatResponseTime(record.responseTime)}
+                          </Text>
+                        </View>
+                        <Text className={styles.timelineTaskName}>
+                          {getTaskName(record.taskId)}
+                        </Text>
+                        {record.photoUrl && (
+                          <View className={styles.timelinePhoto} onClick={() => handleViewPhoto(record.photoUrl!)}>
+                            <Image src={record.photoUrl} className={styles.timelinePhotoImg} mode="aspectFill" />
+                            <Text className={styles.timelinePhotoLabel}>📷 仪表照片</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
+
+          {filteredReminders.length === 0 && taskResponseRecords.length === 0 && (
             <View className={styles.emptyState}>
               <Text className={styles.emptyIcon}>🔔</Text>
               <Text className={styles.emptyText}>暂无相关提醒</Text>
@@ -289,88 +365,70 @@ const RemindersPage: React.FC = () => {
               </View>
             </View>
 
-            <View className={styles.panelContent}>
+            <ScrollView className={styles.panelContent} scrollY>
               <Text className={styles.panelReminderTitle}>{activeReminder.title}</Text>
               <Text className={styles.panelReminderContent}>{activeReminder.content}</Text>
-            </View>
 
-            {activeReminder.type === 'temp_warning' && (
-              <View className={styles.guideSection}>
-                <StepGuide
-                  steps={guideSteps}
-                  onStepComplete={completeGuideStep}
-                  title="请按顺序检查排除原因"
-                />
-              </View>
-            )}
-
-            <Text
-              style={{
-                fontSize: '28rpx',
-                fontWeight: 500,
-                color: '#1D2129',
-                marginBottom: '24rpx'
-              }}
-            >
-              请选择当前状态
-            </Text>
-
-            <View className={styles.statusButtons}>
-              <StatusButton
-                type="temp_normal"
-                selected={selectedResponse === 'temp_normal'}
-                onClick={() => setSelectedResponse('temp_normal')}
-              />
-              <StatusButton
-                type="refuel_no_open"
-                selected={selectedResponse === 'refuel_no_open'}
-                onClick={() => setSelectedResponse('refuel_no_open')}
-              />
-              <StatusButton
-                type="fluctuation_found"
-                selected={selectedResponse === 'fluctuation_found'}
-                onClick={() => setSelectedResponse('fluctuation_found')}
-              />
-              <StatusButton
-                type="checked_ok"
-                selected={selectedResponse === 'checked_ok'}
-                onClick={() => setSelectedResponse('checked_ok')}
-              />
-            </View>
-
-            <Text
-              style={{
-                fontSize: '28rpx',
-                fontWeight: 500,
-                color: '#1D2129',
-                marginBottom: '24rpx'
-              }}
-            >
-              仪表照片（可选）
-            </Text>
-
-            <View className={styles.photoSection}>
-              {photoUrl ? (
-                <View className={styles.photoPreview}>
-                  <Image src={photoUrl} className={styles.previewImg} mode="aspectFill" />
-                  <View className={styles.removePhotoBtn} onClick={handleRemovePhoto}>
-                    <Text className={styles.removeIcon}>✕</Text>
-                  </View>
-                </View>
-              ) : (
-                <View className={styles.photoBtn} onClick={handleTakePhoto}>
-                  <Text className={styles.photoIcon}>📷</Text>
-                  <Text className={styles.photoText}>拍照片</Text>
+              {activeReminder.type === 'temp_warning' && (
+                <View className={styles.guideSection}>
+                  <StepGuide
+                    steps={guideSteps}
+                    onStepComplete={completeGuideStep}
+                    title="请按顺序检查排除原因"
+                  />
                 </View>
               )}
-            </View>
 
-            <View
-              className={classnames(styles.confirmBtn, !selectedResponse && styles.disabled)}
-              onClick={handleSubmitResponse}
-            >
-              <Text className={styles.confirmBtnText}>确认提交</Text>
-            </View>
+              <Text className={styles.panelSectionTitle}>请选择当前状态</Text>
+
+              <View className={styles.statusButtons}>
+                <StatusButton
+                  type="temp_normal"
+                  selected={selectedResponse === 'temp_normal'}
+                  onClick={() => setSelectedResponse('temp_normal')}
+                />
+                <StatusButton
+                  type="refuel_no_open"
+                  selected={selectedResponse === 'refuel_no_open'}
+                  onClick={() => setSelectedResponse('refuel_no_open')}
+                />
+                <StatusButton
+                  type="fluctuation_found"
+                  selected={selectedResponse === 'fluctuation_found'}
+                  onClick={() => setSelectedResponse('fluctuation_found')}
+                />
+                <StatusButton
+                  type="checked_ok"
+                  selected={selectedResponse === 'checked_ok'}
+                  onClick={() => setSelectedResponse('checked_ok')}
+                />
+              </View>
+
+              <Text className={styles.panelSectionTitle}>仪表照片（可选）</Text>
+
+              <View className={styles.photoSection}>
+                {photoUrl ? (
+                  <View className={styles.photoPreview}>
+                    <Image src={photoUrl} className={styles.previewImg} mode="aspectFill" />
+                    <View className={styles.removePhotoBtn} onClick={handleRemovePhoto}>
+                      <Text className={styles.removeIcon}>✕</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View className={styles.photoBtn} onClick={handleTakePhoto}>
+                    <Text className={styles.photoIcon}>📷</Text>
+                    <Text className={styles.photoText}>拍照片</Text>
+                  </View>
+                )}
+              </View>
+
+              <View
+                className={classnames(styles.confirmBtn, !selectedResponse && styles.disabled)}
+                onClick={handleSubmitResponse}
+              >
+                <Text className={styles.confirmBtnText}>确认提交</Text>
+              </View>
+            </ScrollView>
           </>
         )}
       </View>
