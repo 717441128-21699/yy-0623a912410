@@ -406,6 +406,73 @@
   color: $color-text-secondary;
 }
 
+.timelineMeta {
+  margin-top: $spacing-xs;
+}
+
+.timelineDuration {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.timelineNote {
+  margin-top: $spacing-xs;
+  background: $color-bg-card;
+  border-radius: $radius-sm;
+  padding: $spacing-sm;
+  border-left: 4rpx solid $color-warning;
+}
+
+.timelineNoteLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.timelineNoteText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}
+
+.ledgerGroup {
+  margin-bottom: $spacing-md;
+}
+
+.ledgerGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-md $radius-md 0 0;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.ledgerGroupName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.ledgerGroupOrder {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.handlingNoteInput {
+  width: 100%;
+  height: 80rpx;
+  padding: $spacing-sm $spacing-md;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  background: $color-bg-card;
+  box-sizing: border-box;
+}
+
 .emptyState {
   display: flex;
   flex-direction: column;

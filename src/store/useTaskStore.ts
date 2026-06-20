@@ -26,7 +26,8 @@ interface TaskState {
   getHandoverHistory: (taskId: string) => HandoverSummary | undefined;
   resetSelectedTaskToNextInTransit: () => void;
 
-  respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string) => void;
+  respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string, handlingNote?: string) => void;
+  addHandlingNote: (recordId: string, note: string) => void;
   setActiveReminder: (reminderId: string | null) => void;
 
   resetGuideSteps: () => void;
@@ -136,14 +137,13 @@ export const useTaskStore = create<TaskState>((set, get) => ({
           ? { ...task, status: { ...task.status, status: 'completed' as const } }
           : task
       );
-      const nextInTransit = updatedTasks.find(t => t.status.status === 'in_transit');
       const newHistories = { ...state.handoverHistories };
       if (summary) {
         newHistories[taskId] = summary;
       }
       return {
         tasks: updatedTasks,
-        selectedTaskId: nextInTransit?.id || null,
+        selectedTaskId: taskId,
         handoverHistories: newHistories
       };
     });
@@ -159,7 +159,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ selectedTaskId: inTransit?.id || null });
   },
 
-  respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string) => {
+  respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string, handlingNote?: string) => {
     console.log('[TaskStore] respondToReminder:', reminderId, response);
     const reminder = get().reminders.find(r => r.id === reminderId);
     const now = new Date().toISOString();
@@ -183,9 +183,20 @@ export const useTaskStore = create<TaskState>((set, get) => ({
           reminderId,
           response,
           responseTime: now,
-          photoUrl
+          photoUrl,
+          handlingNote,
+          reminderTriggerTime: reminder?.triggerTime
         }
       ]
+    }));
+  },
+
+  addHandlingNote: (recordId: string, note: string) => {
+    console.log('[TaskStore] addHandlingNote:', recordId, note);
+    set(state => ({
+      driverResponseRecords: state.driverResponseRecords.map(r =>
+        r.id === recordId ? { ...r, handlingNote: note } : r
+      )
     }));
   },
 
@@ -233,6 +244,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     const effectiveReceiverName = form.receiverName || task.receiverName;
     const effectiveReceiverPhone = form.receiverPhone || task.receiverPhone;
 
+    const exceptionRecords = get().driverResponseRecords.filter(
+      r => r.taskId === taskId && r.response === 'fluctuation_found'
+    );
+
     const summary: HandoverSummary = {
       taskId: task.id,
       orderNo: task.orderNo,
@@ -251,7 +266,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       receiverName: effectiveReceiverName,
       receiverPhone: effectiveReceiverPhone,
       summaryCode: generateSummaryCode(taskId),
-      photos: form.photos || []
+      photos: form.photos || [],
+      exceptionRecords
     };
 
     console.log('[TaskStore] generateHandoverSummary:', summary);

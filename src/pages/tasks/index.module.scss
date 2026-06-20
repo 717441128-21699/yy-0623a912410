@@ -285,3 +285,302 @@
   height: 120rpx;
   border-radius: $radius-sm;
 }
+
+.completedActions {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-lg 0 0;
+  border-top: 1rpx solid $color-divider;
+  margin-top: $spacing-md;
+}
+
+.historyBtn {
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  border: 2rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.historyBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.shareBtn {
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: $color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shareBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #fff;
+}
+
+.exceptionSection {
+  padding: $spacing-md 0;
+  border-top: 1rpx solid $color-divider;
+  margin-top: $spacing-sm;
+}
+
+.exceptionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-warning;
+  margin-bottom: $spacing-md;
+}
+
+.exceptionItem {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  border-left: 6rpx solid $color-warning;
+}
+
+.exceptionItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.exceptionItemTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.exceptionItemStatus {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-warning;
+}
+
+.exceptionItemNote {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
+}
+
+.exceptionItemPhoto {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-sm;
+  margin-top: $spacing-xs;
+}
+
+.mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: all $transition-base;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.historyPanel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 85vh;
+  background: $color-bg-page;
+  border-radius: $radius-lg $radius-lg 0 0;
+  z-index: 100;
+  transform: translateY(100%);
+  transition: transform $transition-base;
+
+  &.visible {
+    transform: translateY(0);
+  }
+}
+
+.historyPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+  background: $color-bg-card;
+  border-radius: $radius-lg $radius-lg 0 0;
+}
+
+.historyPanelTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.historyPanelClose {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeIcon {
+  font-size: $font-size-lg;
+  color: $color-text-secondary;
+}
+
+.historyPanelContent {
+  padding: $spacing-md;
+  max-height: 70vh;
+}
+
+.historySection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.historySectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.historyRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm 0;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider-light;
+  }
+}
+
+.historyLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.historyValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+
+  &.tempConfirmed {
+    color: $color-success;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.historyCodeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.historyCode {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  letter-spacing: 2rpx;
+}
+
+.historyCodeCopy {
+  padding: $spacing-xs $spacing-md;
+  background: $color-tag-blue;
+  border-radius: $radius-button;
+}
+
+.historyCodeCopyText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.historyPhotoGrid {
+  display: flex;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  margin-top: $spacing-sm;
+}
+
+.historyPhotoItem {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-sm;
+}
+
+.historyExceptionItem {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  border-left: 6rpx solid $color-warning;
+}
+
+.historyExceptionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.historyExceptionTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.historyExceptionStatus {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-warning;
+}
+
+.historyExceptionNote {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
+}
+
+.historyExceptionPhoto {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-sm;
+  margin-top: $spacing-xs;
+}
+
+.historyShareBtn {
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: $color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: $spacing-md 0;
+}
+
+.historyShareBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #fff;
+}

@@ -90,6 +90,8 @@ export interface DriverResponseRecord {
   responseTime: string;
   photoUrl?: string;
   note?: string;
+  handlingNote?: string;
+  reminderTriggerTime?: string;
 }
 
 export interface HandoverSummary {
@@ -111,4 +113,5 @@ export interface HandoverSummary {
   receiverPhone: string;
   summaryCode: string;
   photos?: string[];
+  exceptionRecords?: DriverResponseRecord[];
 }
