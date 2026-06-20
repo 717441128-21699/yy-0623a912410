@@ -1,0 +1,136 @@
+@use '@/styles/variables.scss' as *;
+
+.gauge {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+}
+
+.sizeSm {
+  padding: $spacing-md;
+}
+
+.sizeLg {
+  padding: $spacing-xl;
+}
+
+.gaugeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.currentTemp {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+
+  .sizeSm & {
+    font-size: $font-size-xl;
+  }
+
+  .sizeLg & {
+    font-size: 56rpx;
+  }
+}
+
+.statusBadge {
+  padding: 6rpx 16rpx;
+  border-radius: $radius-sm;
+
+  &.statusNormal {
+    background: $color-tag-green;
+    .statusText { color: $color-success; }
+  }
+
+  &.statusWarning {
+    background: $color-tag-orange;
+    .statusText { color: $color-warning; }
+  }
+
+  &.statusDanger {
+    background: $color-tag-red;
+    .statusText { color: $color-error; }
+  }
+}
+
+.statusText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.gaugeBar {
+  position: relative;
+  height: 16rpx;
+  margin-bottom: $spacing-sm;
+
+  .sizeSm & {
+    height: 12rpx;
+  }
+
+  .sizeLg & {
+    height: 20rpx;
+  }
+}
+
+.barTrack {
+  display: flex;
+  height: 100%;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.barCold {
+  background: linear-gradient(90deg, $color-temp-cold 0%, rgba($color-temp-cold, 0.5) 100%);
+}
+
+.barSafe {
+  background: linear-gradient(90deg, rgba($color-temp-cool, 0.5) 0%, $color-temp-cool 50%, rgba($color-temp-cool, 0.5) 100%);
+}
+
+.barWarm {
+  background: linear-gradient(90deg, rgba($color-temp-warm, 0.5) 0%, $color-temp-warm 100%);
+}
+
+.indicator {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  border: 4rpx solid $color-bg-card;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  transition: left $transition-base;
+
+  .sizeSm & {
+    width: 20rpx;
+    height: 20rpx;
+    border-width: 3rpx;
+  }
+
+  .sizeLg & {
+    width: 28rpx;
+    height: 28rpx;
+    border-width: 5rpx;
+  }
+}
+
+.gaugeLabels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.labelMin,
+.labelMax {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.labelRange {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-primary;
+}

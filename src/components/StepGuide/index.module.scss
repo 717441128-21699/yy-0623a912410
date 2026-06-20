@@ -1,0 +1,166 @@
+@use '@/styles/variables.scss' as *;
+
+.stepGuide {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  padding: $spacing-lg;
+}
+
+.guideHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.guideIcon {
+  font-size: 36rpx;
+}
+
+.guideTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.stepsContainer {
+  padding-left: $spacing-sm;
+}
+
+.stepItem {
+  position: relative;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.locked {
+    opacity: 0.5;
+  }
+}
+
+.stepHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  padding: $spacing-sm 0;
+}
+
+.stepNumber {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  border: 2rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: $color-bg-card;
+
+  &.numberCurrent {
+    border-color: $color-primary;
+    background: $color-tag-blue;
+  }
+
+  &.numberCompleted {
+    border-color: $color-success;
+    background: $color-success;
+  }
+}
+
+.numberText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
+
+  .numberCurrent & {
+    color: $color-primary;
+  }
+}
+
+.checkIcon {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+}
+
+.stepInfo {
+  flex: 1;
+}
+
+.stepTitle {
+  display: block;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+
+  .current & {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.stepDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  line-height: 1.5;
+}
+
+.stepAction {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: 8rpx 20rpx;
+  border-radius: $radius-button;
+  flex-shrink: 0;
+}
+
+.actionText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+.stepLock {
+  flex-shrink: 0;
+}
+
+.lockIcon {
+  font-size: 28rpx;
+}
+
+.connectLine {
+  position: absolute;
+  left: 23rpx;
+  top: 64rpx;
+  width: 2rpx;
+  height: 40rpx;
+  background: $color-border;
+
+  &.lineCompleted {
+    background: $color-success;
+  }
+}
+
+.completeTip {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  background: $color-tag-green;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  margin-top: $spacing-md;
+}
+
+.completeIcon {
+  font-size: 32rpx;
+}
+
+.completeText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-success;
+}

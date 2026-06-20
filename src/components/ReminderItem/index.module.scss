@@ -1,0 +1,171 @@
+@use '@/styles/variables.scss' as *;
+
+.reminderItem {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  border-left: 6rpx solid $color-primary;
+  transition: all $transition-base;
+
+  &.responded {
+    border-left-color: $color-success;
+    opacity: 0.9;
+  }
+
+  &.pending {
+    border-left-color: $color-border;
+    opacity: 0.7;
+  }
+}
+
+.reminderHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.typeIcon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.typePrimary {
+    background: $color-tag-blue;
+  }
+
+  &.typeWarning {
+    background: $color-tag-orange;
+  }
+
+  &.typeDanger {
+    background: $color-tag-red;
+  }
+}
+
+.iconText {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.headerInfo {
+  flex: 1;
+}
+
+.reminderTitle {
+  display: block;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.triggerTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.pendingBadge {
+  background: $color-tag-orange;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+}
+
+.pendingText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-warning;
+}
+
+.respondedBadge {
+  background: $color-tag-green;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+}
+
+.respondedText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-success;
+}
+
+.reminderContent {
+  margin-bottom: $spacing-md;
+}
+
+.contentText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.responseSection {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+}
+
+.responseInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4rpx;
+}
+
+.responseLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.responseValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-success;
+}
+
+.responseTime {
+  display: block;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+}
+
+.photoPreview {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.photoImg {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-sm;
+}
+
+.photoLabel {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.actionSection {
+  margin-top: $spacing-md;
+}
+
+.respondBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-button;
+  align-self: flex-start;
+  display: inline-flex;
+}
+
+.respondText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}

@@ -1,0 +1,40 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 0 $page-padding;
+  box-sizing: border-box;
+}
+
+.contentCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  padding: $spacing-xl * 2;
+  text-align: center;
+  width: 100%;
+  max-width: $max-content-width;
+}
+
+.icon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-lg;
+  display: block;
+}
+
+.title {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.subtitle {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  line-height: 1.6;
+}

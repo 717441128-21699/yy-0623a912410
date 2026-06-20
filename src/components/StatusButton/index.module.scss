@@ -1,0 +1,62 @@
+@use '@/styles/variables.scss' as *;
+
+.statusBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-card;
+  border: 2rpx solid $color-border;
+  transition: all $transition-base;
+  min-height: 140rpx;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.selected {
+    border-color: $color-primary;
+    background: $color-tag-blue;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &.colorSuccess {
+    &.selected {
+      border-color: $color-success;
+      background: $color-tag-green;
+    }
+  }
+
+  &.colorWarning {
+    &.selected {
+      border-color: $color-warning;
+      background: $color-tag-orange;
+    }
+  }
+
+  &.colorPrimary {
+    &.selected {
+      border-color: $color-primary;
+      background: $color-tag-blue;
+    }
+  }
+}
+
+.btnIcon {
+  font-size: 48rpx;
+  margin-bottom: $spacing-xs;
+  line-height: 1;
+}
+
+.btnLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  text-align: center;
+}

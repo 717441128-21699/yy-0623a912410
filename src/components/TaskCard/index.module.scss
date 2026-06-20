@@ -1,0 +1,202 @@
+@use '@/styles/variables.scss' as *;
+
+.taskCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+    box-shadow: $shadow-card-hover;
+  }
+
+  &.selected {
+    border: 2rpx solid $color-primary;
+    box-shadow: 0 4rpx 20rpx rgba($color-primary, 0.15);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.orderInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.orderNo {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+}
+
+.statusTag {
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+
+  &.statusPending {
+    background: $color-tag-orange;
+    .statusText { color: $color-warning; }
+  }
+
+  &.statusInTransit {
+    background: $color-tag-blue;
+    .statusText { color: $color-primary; }
+  }
+
+  &.statusCompleted {
+    background: $color-tag-green;
+    .statusText { color: $color-success; }
+  }
+}
+
+.statusText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.cargoTypeTag {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: 6rpx 16rpx;
+  border-radius: $radius-sm;
+}
+
+.cargoTypeText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+.cargoInfo {
+  margin-bottom: $spacing-md;
+}
+
+.cargoName {
+  display: block;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.cargoWeight {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.tempSection {
+  display: flex;
+  justify-content: space-between;
+  background: $color-bg-gradient-start;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.tempTarget,
+.tempCurrent,
+.tempFluctuation {
+  flex: 1;
+  text-align: center;
+}
+
+.tempLabel {
+  display: block;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 6rpx;
+}
+
+.tempRange {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.tempValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+}
+
+.routeSection {
+  margin-bottom: $spacing-md;
+}
+
+.routePoint {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+}
+
+.routeDotStart {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: $color-success;
+  margin-top: 6rpx;
+  flex-shrink: 0;
+}
+
+.routeDotEnd {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: $color-warning;
+  margin-top: 6rpx;
+  flex-shrink: 0;
+}
+
+.routeLine {
+  width: 2rpx;
+  height: 32rpx;
+  background: $color-border;
+  margin-left: 7rpx;
+}
+
+.routeText {
+  flex: 1;
+}
+
+.routeLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-right: $spacing-sm;
+}
+
+.routeAddress {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include text-ellipsis;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-around;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.footerItem {
+  text-align: center;
+}
+
+.footerLabel {
+  display: block;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+}
+
+.footerValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
