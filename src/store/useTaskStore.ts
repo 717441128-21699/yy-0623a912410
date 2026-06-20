@@ -14,13 +14,14 @@ interface TaskState {
   handoverForm: Partial<HandoverForm>;
   handoverSummary: HandoverSummary | null;
 
-  setSelectedTask: (taskId: string) => void;
+  setSelectedTask: (taskId: string | null) => void;
   getSelectedTask: () => Task | undefined;
   updateTaskTemp: (taskId: string, temp: number) => void;
   completeCheckPoint: (taskId: string, checkPointId: string) => void;
   incrementDoorOpen: (taskId: string) => void;
   addPhoto: (taskId: string, photoUrl: string) => void;
   completeTask: (taskId: string) => void;
+  resetSelectedTaskToNextInTransit: () => void;
 
   respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string) => void;
   setActiveReminder: (reminderId: string | null) => void;
@@ -37,7 +38,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: mockTasks,
   reminders: mockReminders,
   driverResponseRecords: [],
-  selectedTaskId: mockTasks[0]?.id || null,
+  selectedTaskId: null,
   activeReminderId: null,
   guideSteps: [
     { id: 1, title: '检查厢门是否关闭严密', description: '查看厢门密封条是否完好，确认锁扣已扣紧', completed: false },
@@ -47,7 +48,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   handoverForm: {},
   handoverSummary: null,
 
-  setSelectedTask: (taskId: string) => {
+  setSelectedTask: (taskId: string | null) => {
     console.log('[TaskStore] setSelectedTask:', taskId);
     set({ selectedTaskId: taskId });
   },
@@ -108,13 +109,24 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   completeTask: (taskId: string) => {
     console.log('[TaskStore] completeTask:', taskId);
-    set(state => ({
-      tasks: state.tasks.map(task =>
+    set(state => {
+      const updatedTasks = state.tasks.map(task =>
         task.id === taskId
           ? { ...task, status: { ...task.status, status: 'completed' as const } }
           : task
-      )
-    }));
+      );
+      const nextInTransit = updatedTasks.find(t => t.status.status === 'in_transit');
+      return {
+        tasks: updatedTasks,
+        selectedTaskId: nextInTransit?.id || null
+      };
+    });
+  },
+
+  resetSelectedTaskToNextInTransit: () => {
+    const { tasks } = get();
+    const inTransit = tasks.find(t => t.status.status === 'in_transit');
+    set({ selectedTaskId: inTransit?.id || null });
   },
 
   respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string) => {
@@ -204,6 +216,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       arrivalTime: new Date().toISOString(),
       unloadingStartTime: form.unloadingStartTime || new Date().toISOString(),
       receiverName: form.receiverName || task.receiverName,
+      receiverPhone: form.receiverPhone || task.receiverPhone,
       summaryCode: generateSummaryCode(taskId),
       photos: form.photos || []
     };

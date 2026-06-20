@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
@@ -8,6 +8,7 @@ import TaskCard from '@/components/TaskCard';
 import TemperatureGauge from '@/components/TemperatureGauge';
 import CheckPointItem from '@/components/CheckPointItem';
 import { formatTempRange, formatTemp } from '@/utils/temperature';
+import type { Task } from '@/types';
 import styles from './index.module.scss';
 
 type TabType = 'in_transit' | 'pending' | 'completed';
@@ -38,10 +39,23 @@ const TasksPage: React.FC = () => {
     }
   }, [activeTab, inTransitTasks, pendingTasks, completedTasks]);
 
-  const selectedTask = useMemo(
-    () => tasks.find(t => t.id === selectedTaskId) || displayTasks[0],
-    [tasks, selectedTaskId, displayTasks]
-  );
+  useEffect(() => {
+    if (displayTasks.length > 0) {
+      const currentSelected = tasks.find(t => t.id === selectedTaskId);
+      const isSelectedInCurrentTab = currentSelected && displayTasks.some(t => t.id === currentSelected.id);
+      if (!isSelectedInCurrentTab) {
+        setSelectedTask(displayTasks[0].id);
+      }
+    }
+  }, [activeTab, displayTasks, tasks, selectedTaskId, setSelectedTask]);
+
+  const selectedTask: Task | undefined = useMemo(() => {
+    const task = tasks.find(t => t.id === selectedTaskId);
+    if (task && displayTasks.some(t => t.id === task.id)) {
+      return task;
+    }
+    return displayTasks[0];
+  }, [tasks, selectedTaskId, displayTasks]);
 
   const handleTaskSelect = (taskId: string) => {
     setSelectedTask(taskId);

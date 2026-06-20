@@ -26,7 +26,6 @@ const HandoverPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<StepType>(1);
   const [showTaskPicker, setShowTaskPicker] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
-  const [summaryGenerated, setSummaryGenerated] = useState(false);
   const [summary, setSummary] = useState<HandoverSummary | null>(null);
   const [tempInput, setTempInput] = useState<string>('');
   const [tempConfirmed, setTempConfirmed] = useState(false);
@@ -52,7 +51,6 @@ const HandoverPage: React.FC = () => {
     setShowTaskPicker(false);
     resetHandoverForm();
     setPhotos([]);
-    setSummaryGenerated(false);
     setSummary(null);
     setCurrentStep(1);
     setTempConfirmed(false);
@@ -94,6 +92,13 @@ const HandoverPage: React.FC = () => {
       });
       return;
     }
+    if (photos.length === 0) {
+      Taro.showToast({
+        title: '请先拍仪表照片',
+        icon: 'none'
+      });
+      return;
+    }
     updateHandoverForm({ currentTemp: temp, photos: [...photos] });
     setTempConfirmed(true);
     Taro.showToast({
@@ -111,6 +116,22 @@ const HandoverPage: React.FC = () => {
     });
   };
 
+  const canProceedToPreview = () => {
+    if (!handoverForm.receiverName) {
+      Taro.showToast({ title: '请填写收货人姓名', icon: 'none' });
+      return false;
+    }
+    if (!handoverForm.receiverPhone) {
+      Taro.showToast({ title: '请填写收货人电话', icon: 'none' });
+      return false;
+    }
+    if (!handoverForm.unloadingStartTime) {
+      Taro.showToast({ title: '请确认卸货时间', icon: 'none' });
+      return false;
+    }
+    return true;
+  };
+
   const handleNextStep = () => {
     if (currentStep === 1 && !tempConfirmed) {
       Taro.showToast({
@@ -122,25 +143,11 @@ const HandoverPage: React.FC = () => {
     if (currentStep < 3) {
       setCurrentStep((currentStep + 1) as StepType);
     } else if (currentStep === 3) {
-      if (!handoverForm.receiverName) {
-        Taro.showToast({
-          title: '请填写收货人',
-          icon: 'none'
-        });
-        return;
-      }
-      if (!handoverForm.unloadingStartTime) {
-        Taro.showToast({
-          title: '请确认卸货时间',
-          icon: 'none'
-        });
-        return;
-      }
+      if (!canProceedToPreview()) return;
       updateHandoverForm({ photos: [...photos] });
       if (selectedTask) {
         const result = generateHandoverSummary(selectedTask.id);
         setSummary(result);
-        setSummaryGenerated(true);
         setCurrentStep(4);
       }
     }
@@ -156,7 +163,6 @@ const HandoverPage: React.FC = () => {
 
   const handleBackToEdit = () => {
     setCurrentStep(1);
-    setSummaryGenerated(false);
     setSummary(null);
   };
 
@@ -189,18 +195,6 @@ const HandoverPage: React.FC = () => {
     }
   };
 
-  const handleReset = () => {
-    resetHandoverForm();
-    setPhotos([]);
-    setSummaryGenerated(false);
-    setSummary(null);
-    setCurrentStep(1);
-    setTempConfirmed(false);
-    if (selectedTask) {
-      setTempInput(String(selectedTask.status.currentTemp));
-    }
-  };
-
   const formatDateTime = (dateStr: string) => {
     return dayjs(dateStr).format('MM-DD HH:mm');
   };
@@ -226,7 +220,7 @@ const HandoverPage: React.FC = () => {
             <Text className={styles.emptyText}>暂无到达待交接任务</Text>
             <Text className={styles.emptySubtext}>请先完成运输途中的检查点</Text>
           </View>
-        ) : summaryGenerated && summary && currentStep === 4 ? (
+        ) : summary && currentStep === 4 ? (
           <View className={styles.summaryCard}>
             <View className={styles.summaryHeader}>
               <Text className={styles.summaryTitle}>📋 交接摘要预览</Text>
@@ -298,9 +292,13 @@ const HandoverPage: React.FC = () => {
                 <Text className={styles.summaryLabel}>收货人</Text>
                 <Text className={styles.summaryValue}>{summary.receiverName}</Text>
               </View>
+              <View className={styles.summaryRow}>
+                <Text className={styles.summaryLabel}>联系电话</Text>
+                <Text className={styles.summaryValue}>{summary.receiverPhone}</Text>
+              </View>
               {summary.photos && summary.photos.length > 0 && (
                 <View className={styles.summaryPhotoSection}>
-                  <Text className={styles.summaryLabel}>温度仪表照片</Text>
+                  <Text className={styles.summaryLabel}>温度仪表照片（确认温度时拍摄）</Text>
                   <View className={styles.summaryPhotoGrid}>
                     {summary.photos.map((photo, idx) => (
                       <Image
@@ -402,7 +400,9 @@ const HandoverPage: React.FC = () => {
                       </View>
                     </View>
 
-                    <Text className={styles.formTitle}>拍照确认（建议拍仪表）</Text>
+                    <Text className={styles.formTitle}>
+                      拍仪表照片 <Text style={{ color: '#F53F3F' }}>*</Text>
+                    </Text>
                     <View className={styles.photoGrid}>
                       {photos.map((photo, index) => (
                         <View key={index} className={styles.photoItem}>
@@ -428,7 +428,7 @@ const HandoverPage: React.FC = () => {
                       onClick={handleConfirmTemp}
                     >
                       <Text className={styles.confirmTempBtnText}>
-                        {tempConfirmed ? '✓ 温度已确认' : '确认温度'}
+                        {tempConfirmed ? '✓ 温度已确认' : '确认温度（需先拍照片）'}
                       </Text>
                     </View>
                   </View>
@@ -438,7 +438,7 @@ const HandoverPage: React.FC = () => {
                   <View>
                     <Text className={styles.formTitle}>确认收货人信息</Text>
                     <View className={styles.inputRow}>
-                      <Text className={styles.inputLabel}>收货人姓名 *</Text>
+                      <Text className={styles.inputLabel}>收货人姓名 <Text style={{ color: '#F53F3F' }}>*</Text></Text>
                       <Input
                         className={styles.inputField}
                         placeholder="请输入收货人姓名"
@@ -448,13 +448,14 @@ const HandoverPage: React.FC = () => {
                       />
                     </View>
                     <View className={styles.inputRow}>
-                      <Text className={styles.inputLabel}>联系电话</Text>
+                      <Text className={styles.inputLabel}>联系电话 <Text style={{ color: '#F53F3F' }}>*</Text></Text>
                       <Input
                         className={styles.inputField}
-                        placeholder="请输入联系电话（可选）"
+                        type="number"
+                        placeholder="请输入联系电话"
                         placeholder-class="input-placeholder"
-                        value={handoverForm.receiverId || ''}
-                        onInput={(e) => updateHandoverForm({ receiverId: e.detail.value })}
+                        value={handoverForm.receiverPhone || selectedTask.receiverPhone}
+                        onInput={(e) => updateHandoverForm({ receiverPhone: e.detail.value })}
                       />
                     </View>
                   </View>

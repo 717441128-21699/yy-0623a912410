@@ -71,6 +71,7 @@ export interface GuideStep {
 export interface HandoverForm {
   currentTemp: number;
   receiverName: string;
+  receiverPhone: string;
   receiverId?: string;
   unloadingStartTime: string;
   signatures: {
@@ -107,6 +108,7 @@ export interface HandoverSummary {
   arrivalTime: string;
   unloadingStartTime: string;
   receiverName: string;
+  receiverPhone: string;
   summaryCode: string;
   photos?: string[];
 }

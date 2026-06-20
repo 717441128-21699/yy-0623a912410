@@ -180,7 +180,7 @@ const RemindersPage: React.FC = () => {
   };
 
   const handleTaskFilter = (taskId: string | null) => {
-    setSelectedTask(taskId || tasks[0]?.id);
+    setSelectedTask(taskId);
   };
 
   const formatResponseTime = (time: string) => {
