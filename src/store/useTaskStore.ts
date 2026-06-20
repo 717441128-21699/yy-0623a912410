@@ -8,6 +8,7 @@ interface TaskState {
   tasks: Task[];
   reminders: Reminder[];
   driverResponseRecords: DriverResponseRecord[];
+  handoverHistories: Record<string, HandoverSummary>;
   selectedTaskId: string | null;
   activeReminderId: string | null;
   guideSteps: GuideStep[];
@@ -21,6 +22,8 @@ interface TaskState {
   incrementDoorOpen: (taskId: string) => void;
   addPhoto: (taskId: string, photoUrl: string) => void;
   completeTask: (taskId: string) => void;
+  completeTaskWithSummary: (taskId: string) => void;
+  getHandoverHistory: (taskId: string) => HandoverSummary | undefined;
   resetSelectedTaskToNextInTransit: () => void;
 
   respondToReminder: (reminderId: string, response: DriverResponse, photoUrl?: string) => void;
@@ -38,6 +41,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: mockTasks,
   reminders: mockReminders,
   driverResponseRecords: [],
+  handoverHistories: {},
   selectedTaskId: null,
   activeReminderId: null,
   guideSteps: [
@@ -123,6 +127,32 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     });
   },
 
+  completeTaskWithSummary: (taskId: string) => {
+    const summary = get().handoverSummary;
+    console.log('[TaskStore] completeTaskWithSummary:', taskId, summary);
+    set(state => {
+      const updatedTasks = state.tasks.map(task =>
+        task.id === taskId
+          ? { ...task, status: { ...task.status, status: 'completed' as const } }
+          : task
+      );
+      const nextInTransit = updatedTasks.find(t => t.status.status === 'in_transit');
+      const newHistories = { ...state.handoverHistories };
+      if (summary) {
+        newHistories[taskId] = summary;
+      }
+      return {
+        tasks: updatedTasks,
+        selectedTaskId: nextInTransit?.id || null,
+        handoverHistories: newHistories
+      };
+    });
+  },
+
+  getHandoverHistory: (taskId: string) => {
+    return get().handoverHistories[taskId];
+  },
+
   resetSelectedTaskToNextInTransit: () => {
     const { tasks } = get();
     const inTransit = tasks.find(t => t.status.status === 'in_transit');
@@ -200,6 +230,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       ? form.currentTemp
       : task.status.currentTemp;
 
+    const effectiveReceiverName = form.receiverName || task.receiverName;
+    const effectiveReceiverPhone = form.receiverPhone || task.receiverPhone;
+
     const summary: HandoverSummary = {
       taskId: task.id,
       orderNo: task.orderNo,
@@ -215,8 +248,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       completedCheckPoints,
       arrivalTime: new Date().toISOString(),
       unloadingStartTime: form.unloadingStartTime || new Date().toISOString(),
-      receiverName: form.receiverName || task.receiverName,
-      receiverPhone: form.receiverPhone || task.receiverPhone,
+      receiverName: effectiveReceiverName,
+      receiverPhone: effectiveReceiverPhone,
       summaryCode: generateSummaryCode(taskId),
       photos: form.photos || []
     };

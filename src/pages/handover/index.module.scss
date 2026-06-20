@@ -643,6 +643,15 @@
   border-top: 1rpx solid $color-divider;
 }
 
+.completedSummaryHeader {
+  background: linear-gradient(135deg, $color-success, #00B42A);
+  border-radius: $radius-lg $radius-lg 0 0;
+}
+
+.fullWidth {
+  flex: 1;
+}
+
 .emptyState {
   display: flex;
   flex-direction: column;

@@ -256,4 +256,32 @@
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   color: $color-text-primary;
+
+  &.tempConfirmed {
+    color: $color-success;
+  }
+
+  &.summaryCode {
+    color: $color-primary;
+    text-decoration: underline;
+  }
+}
+
+.completedPhotoSection {
+  padding: $spacing-md 0;
+  border-top: 1rpx solid $color-divider;
+  margin-top: $spacing-sm;
+}
+
+.completedPhotoGrid {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.completedPhotoItem {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-sm;
 }

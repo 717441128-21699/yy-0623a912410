@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import dayjs from 'dayjs';
@@ -8,13 +8,13 @@ import TaskCard from '@/components/TaskCard';
 import TemperatureGauge from '@/components/TemperatureGauge';
 import CheckPointItem from '@/components/CheckPointItem';
 import { formatTempRange, formatTemp } from '@/utils/temperature';
-import type { Task } from '@/types';
+import type { Task, HandoverSummary } from '@/types';
 import styles from './index.module.scss';
 
 type TabType = 'in_transit' | 'pending' | 'completed';
 
 const TasksPage: React.FC = () => {
-  const { tasks, selectedTaskId, setSelectedTask, completeCheckPoint } = useTaskStore();
+  const { tasks, selectedTaskId, setSelectedTask, completeCheckPoint, handoverHistories } = useTaskStore();
   const [activeTab, setActiveTab] = useState<TabType>('in_transit');
 
   const inTransitTasks = useMemo(
@@ -145,38 +145,112 @@ const TasksPage: React.FC = () => {
                     完成时间：{dayjs(selectedTask.status.lastCheckTime).format('MM-DD HH:mm')}
                   </Text>
                 </View>
-                <View className={styles.completedInfo}>
-                  <View className={styles.completedInfoRow}>
-                    <Text className={styles.completedInfoLabel}>订单编号</Text>
-                    <Text className={styles.completedInfoValue}>{selectedTask.orderNo}</Text>
+                {handoverHistories[selectedTask.id] ? (
+                  <View className={styles.completedInfo}>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>订单编号</Text>
+                      <Text className={styles.completedInfoValue}>{selectedTask.orderNo}</Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>货物名称</Text>
+                      <Text className={styles.completedInfoValue}>{selectedTask.cargoName}</Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>确认到货温度</Text>
+                      <Text className={classnames(styles.completedInfoValue, styles.tempConfirmed)}>
+                        {formatTemp(handoverHistories[selectedTask.id].tempRecord.arrival)}
+                      </Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>目标温区</Text>
+                      <Text className={styles.completedInfoValue}>{formatTempRange(selectedTask.targetTemp)}</Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>卸货开始时间</Text>
+                      <Text className={styles.completedInfoValue}>
+                        {dayjs(handoverHistories[selectedTask.id].unloadingStartTime).format('MM-DD HH:mm')}
+                      </Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>收货人</Text>
+                      <Text className={styles.completedInfoValue}>
+                        {handoverHistories[selectedTask.id].receiverName}
+                      </Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>联系电话</Text>
+                      <Text className={styles.completedInfoValue}>
+                        {handoverHistories[selectedTask.id].receiverPhone}
+                      </Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>开门次数</Text>
+                      <Text className={styles.completedInfoValue}>{selectedTask.status.doorOpenCount} 次</Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>检查点完成</Text>
+                      <Text className={styles.completedInfoValue}>
+                        {selectedTask.checkPoints.filter(cp => cp.completed).length}/{selectedTask.checkPoints.length}
+                      </Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>交接码</Text>
+                      <Text
+                        className={classnames(styles.completedInfoValue, styles.summaryCode)}
+                        onClick={() => {
+                          Taro.setClipboardData({
+                            data: handoverHistories[selectedTask.id].summaryCode,
+                            success: () => Taro.showToast({ title: '已复制交接码', icon: 'success' })
+                          });
+                        }}
+                      >
+                        {handoverHistories[selectedTask.id].summaryCode}
+                      </Text>
+                    </View>
+                    {handoverHistories[selectedTask.id].photos && handoverHistories[selectedTask.id].photos!.length > 0 && (
+                      <View className={styles.completedPhotoSection}>
+                        <Text className={styles.completedInfoLabel}>仪表照片</Text>
+                        <View className={styles.completedPhotoGrid}>
+                          {handoverHistories[selectedTask.id].photos!.map((photo, idx) => (
+                            <Image
+                              key={idx}
+                              src={photo}
+                              className={styles.completedPhotoItem}
+                              mode="aspectFill"
+                              onClick={() => Taro.previewImage({
+                                urls: handoverHistories[selectedTask.id].photos || [],
+                                current: photo
+                              })}
+                            />
+                          ))}
+                        </View>
+                      </View>
+                    )}
                   </View>
-                  <View className={styles.completedInfoRow}>
-                    <Text className={styles.completedInfoLabel}>货物名称</Text>
-                    <Text className={styles.completedInfoValue}>{selectedTask.cargoName}</Text>
+                ) : (
+                  <View className={styles.completedInfo}>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>订单编号</Text>
+                      <Text className={styles.completedInfoValue}>{selectedTask.orderNo}</Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>货物名称</Text>
+                      <Text className={styles.completedInfoValue}>{selectedTask.cargoName}</Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>目标温区</Text>
+                      <Text className={styles.completedInfoValue}>{formatTempRange(selectedTask.targetTemp)}</Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>最后记录温度</Text>
+                      <Text className={styles.completedInfoValue}>{formatTemp(selectedTask.status.currentTemp)}</Text>
+                    </View>
+                    <View className={styles.completedInfoRow}>
+                      <Text className={styles.completedInfoLabel}>收货人</Text>
+                      <Text className={styles.completedInfoValue}>{selectedTask.receiverName}</Text>
+                    </View>
                   </View>
-                  <View className={styles.completedInfoRow}>
-                    <Text className={styles.completedInfoLabel}>目标温区</Text>
-                    <Text className={styles.completedInfoValue}>{formatTempRange(selectedTask.targetTemp)}</Text>
-                  </View>
-                  <View className={styles.completedInfoRow}>
-                    <Text className={styles.completedInfoLabel}>最后记录温度</Text>
-                    <Text className={styles.completedInfoValue}>{formatTemp(selectedTask.status.currentTemp)}</Text>
-                  </View>
-                  <View className={styles.completedInfoRow}>
-                    <Text className={styles.completedInfoLabel}>检查点完成</Text>
-                    <Text className={styles.completedInfoValue}>
-                      {selectedTask.checkPoints.filter(cp => cp.completed).length}/{selectedTask.checkPoints.length}
-                    </Text>
-                  </View>
-                  <View className={styles.completedInfoRow}>
-                    <Text className={styles.completedInfoLabel}>开门次数</Text>
-                    <Text className={styles.completedInfoValue}>{selectedTask.status.doorOpenCount} 次</Text>
-                  </View>
-                  <View className={styles.completedInfoRow}>
-                    <Text className={styles.completedInfoLabel}>收货人</Text>
-                    <Text className={styles.completedInfoValue}>{selectedTask.receiverName}</Text>
-                  </View>
-                </View>
+                )}
               </View>
             </View>
           ) : selectedTask ? (
